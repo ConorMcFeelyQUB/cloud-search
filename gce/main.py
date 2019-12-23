@@ -2,9 +2,20 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 from search_result import Search_result, Advert, sorted_ranked_results
 import mysql.connector as mysql
+import os
 
-db = mysql.connect(
-    host = "35.187.184.139",
+advert_ip =  str(os.environ.get("ADVERTIP"))
+
+page_ip = str(os.environ.get("PAGEIP"))
+
+db_advert = mysql.connect(
+    host = advert_ip,
+    user = "root",
+    passwd = "QUBccProject"
+)
+
+db_page = mysql.connect(
+    host = page_ip,
     user = "root",
     passwd = "QUBccProject"
 )
@@ -24,7 +35,7 @@ def use_db():
 
     #db stuff
     #--------------------------------
-    cursor = db.cursor()
+    cursor_advert = db_advert.cursor()
 
     #could pull each db serach out into a method or something to make this nicer
 
@@ -40,8 +51,8 @@ def use_db():
 
     #just uses the first word of the search term for the time being
     #advert_query = "SELECT * FROM cloudcomputing.advert WHERE keyword LIKE '%" + query_words[0] + "%';" #single wrd for now but will need to update to work with multiword query stings
-    cursor.execute(advert_query)
-    adverts = cursor.fetchall()
+    cursor_advert.execute(advert_query)
+    adverts = cursor_advert.fetchall()
     print("Length of adverts: " + str(len(adverts)))
 
     advert_list = []
@@ -57,14 +68,17 @@ def use_db():
     #################################
     #Results QUERY
     #gets all results that have any of the words
+
+    cursor_page = db_page.cursor()
+
     page_query = "SELECT * FROM "+ pages_database +" WHERE content LIKE '%" + query_words[0] + "%'"
     if len(query_words) > 1:
         for word in query_words[1:]:
             page_query = page_query + " OR content LIKE '%" + word + "%'"
 
     #page_query = "SELECT * FROM cloudcomputing.page WHERE content LIKE '%" + query_string + "%';"
-    cursor.execute(page_query)
-    pages = cursor.fetchall()
+    cursor_page.execute(page_query)
+    pages = cursor_page.fetchall()
     #####################################
     
 
